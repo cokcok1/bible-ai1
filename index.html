@@ -14,7 +14,7 @@
     #bibleSection { background: #e6f0ff; height: 50svh; display:flex; flex-direction:column; padding:12px; box-sizing:border-box; }
     #bibleContent { flex:1; overflow-y:auto; background:white; padding:12px; border-radius:8px; box-shadow: inset 0 0 3px rgba(0,0,0,0.1); }
     #aiSection { background: #e6f0ff; height: 50svh; display:flex; flex-direction:column; padding:12px; box-sizing:border-box; }
-    #aiOutput, #geoOutput { flex:1; overflow-y:auto; background:white; padding:12px; border-radius:8px; box-shadow: inset 0 0 3px rgba(0,0,0,0.1); font-size:0.95rem; margin-bottom:8px; }
+    #output { flex:1; overflow-y:auto; background:white; padding:12px; border-radius:8px; box-shadow: inset 0 0 3px rgba(0,0,0,0.1); font-size:0.95rem; margin-bottom:8px; }
     #versionTag { position: fixed; bottom: 2px; right: 6px; font-size: 0.7rem; color: gray; background: rgba(255,255,255,0.5); padding: 2px 4px; border-radius: 3px; }
   </style>
 </head>
@@ -42,23 +42,21 @@
   </div>
 
   <div id="aiSection" class="rounded-t-lg shadow-md">
-    <div id="aiOutput" class="no-scrollbar"></div>
-    <div id="geoOutput" class="no-scrollbar text-blue-800 text-sm"></div>
+    <div id="output" class="no-scrollbar"></div>
     <div id="loadingIndicator" class="hidden text-center mt-1 text-blue-600 text-sm">🤔 AI 正在思考中...</div>
   </div>
 </div>
 
-<div id="versionTag">AI解釋內容只供參考 080225 0215</div>
+<div id="versionTag">AI解釋內容只供參考 080225 0054</div>
 
 <script type="module">
-const GEMINI_KEY = "AIzaSyBURyCnTRY5pO0OZjyMRI37jYEU_tWShhg";
+const GEMINI_KEY = "AIzaSyBURyCnTRY5pO0OZjyMRI37jYEU_tWShhg ";
 
 const bookSelect=document.getElementById('bookSelect');
 const chapterSelect=document.getElementById('chapterSelect');
 const verseSelect=document.getElementById('verseSelect');
 const bibleContentDiv=document.getElementById('bibleContent');
-const aiOutputDiv=document.getElementById('aiOutput');
-const geoOutputDiv=document.getElementById('geoOutput');
+const outputDiv=document.getElementById('output');
 const explainButton=document.getElementById('explainButton');
 const geoButton=document.getElementById('geoButton');
 const loading=document.getElementById('loadingIndicator');
@@ -153,7 +151,7 @@ function showChapter(){
 prevBtn.onclick=()=>{chapterSelect.value=parseInt(chapterSelect.value)-1;verseSelect.value="";showChapter();};
 nextBtn.onclick=()=>{chapterSelect.value=parseInt(chapterSelect.value)+1;verseSelect.value="";showChapter();};
 
-// AI 解釋
+// ✅ AI 解釋（共用 outputDiv）
 explainButton.onclick = async () => {
   const b=bookSelect.value,ch=chapterSelect.value,v=verseSelect.value;
   let passage=bibleContentDiv.innerText;
@@ -161,18 +159,13 @@ explainButton.onclick = async () => {
   if(passage.length>4000) passage = passage.substring(0, 4000) + " ...（內容已截斷）";
 
   loading.classList.remove("hidden");
-  aiOutputDiv.textContent = ""; 
-  geoOutputDiv.textContent = "";   // ✅ 清空地圖解釋
+  outputDiv.innerHTML = "🤔 AI 正在思考中...";
 
   try {
     const endpoint = `https://generativelanguage.googleapis.com/v1/models/gemini-2.0-flash:generateContent?key=${GEMINI_KEY}`;
     const target = v ? `第${v}節` : `第${ch}章`;
     const payload = {
-      contents: [{
-        parts: [{
-          text: `請用中文（繁體）並以基督教信仰和聖經真理為基礎，解釋聖經 ${b} ${target}。\n經文內容如下：\n${passage}`
-        }]
-      }]
+      contents: [{ parts: [{ text: `請用繁體中文並以基督教信仰為基礎，解釋聖經 ${b} ${target}：\n${passage}` }] }]
     };
     const res = await fetch(endpoint, {
       method: "POST",
@@ -181,25 +174,24 @@ explainButton.onclick = async () => {
     });
     if(!res.ok) throw new Error(`HTTP ${res.status}`);
     const data = await res.json();
-    aiOutputDiv.innerHTML = data.candidates?.[0]?.content?.parts?.map(p => p.text).join("\n").replace(/\n/g,"<br>") || "⚠️ AI 沒有回覆";
+    outputDiv.innerHTML = data.candidates?.[0]?.content?.parts?.map(p => p.text).join("\n").replace(/\n/g,"<br>") || "⚠️ AI 沒有回覆";
   } catch (e) {
-    aiOutputDiv.textContent = "❌ AI 解釋失敗：" + e.message;
+    outputDiv.textContent = "❌ AI 解釋失敗：" + e.message;
   }
   loading.classList.add("hidden");
 };
 
-// 📍 地理背景按鈕
+// ✅ 地理背景（共用 outputDiv + Google Maps 連結）
 geoButton.onclick = async () => {
   const b=bookSelect.value,ch=chapterSelect.value,v=verseSelect.value;
   if(!b||!ch)return;
   loading.classList.remove("hidden");
-  aiOutputDiv.textContent = "";    // ✅ 清空 AI 解釋
-  geoOutputDiv.textContent = "";
+  outputDiv.innerHTML = "🌍 正在獲取地理資料...";
 
   try {
     const endpoint = `https://generativelanguage.googleapis.com/v1/models/gemini-2.0-flash:generateContent?key=${GEMINI_KEY}`;
     const target = v ? `第${v}節` : `第${ch}章`;
-    const prompt = `請提供《${b} ${target}》的地理背景資訊，包括出現的地名、現今位置、可能的城市，並附上可在 Google Maps 搜尋的關鍵字（請用繁體中文）：`;
+    const prompt = `請提供《${b} ${target}》的地理背景資訊，包括地名、現今位置、城市，並附上可在 Google Maps 搜尋的關鍵字（繁體中文）：`;
     const payload = { contents: [{ parts: [{ text: prompt }] }] };
     const res = await fetch(endpoint, {
       method: "POST",
@@ -211,18 +203,17 @@ geoButton.onclick = async () => {
 
     let geoText = data.candidates?.[0]?.content?.parts?.map(p => p.text).join("\n") || "⚠️ 無回覆";
 
-    // ✅ 強化地名偵測：任何 2-20 字的中文詞都變成 Google Maps 連結（避免重複處理）
+    // ✅ 自動把所有中文地名變成 Google Maps 連結
     const seen = new Set();
-    geoText = geoText.replace(/([\u4e00-\u9fa5]{2,20})/g, (match) => {
-      if(seen.has(match)) return match;
-      seen.add(match);
-      const url = `https://www.google.com/maps?q=${encodeURIComponent(match)}`;
-      return `<a href="${url}" target="_blank">${match}</a>`;
+    geoText = geoText.replace(/([\u4e00-\u9fa5]{2,20})/g, (m) => {
+      if(seen.has(m)) return m;
+      seen.add(m);
+      return `<a href="https://www.google.com/maps?q=${encodeURIComponent(m)}" target="_blank">${m}</a>`;
     });
 
-    geoOutputDiv.innerHTML = "<strong>📍 地理位置：</strong><br>" + geoText.replace(/\n/g,"<br>");
+    outputDiv.innerHTML = "<strong>📍 地理位置：</strong><br>" + geoText.replace(/\n/g,"<br>");
   } catch(e){
-    geoOutputDiv.textContent = "❌ 地理資料獲取失敗：" + e.message;
+    outputDiv.textContent = "❌ 地理資料獲取失敗：" + e.message;
   }
   loading.classList.add("hidden");
 };
