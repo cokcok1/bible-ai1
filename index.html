@@ -48,7 +48,7 @@
   </div>
 </div>
 
-<div id="versionTag">AI解釋內容只供參考 020825 0005</div>
+<div id="versionTag">AI解釋內容只供參考 080225 0215</div>
 
 <script type="module">
 const GEMINI_KEY = "AIzaSyBURyCnTRY5pO0OZjyMRI37jYEU_tWShhg";
@@ -161,7 +161,8 @@ explainButton.onclick = async () => {
   if(passage.length>4000) passage = passage.substring(0, 4000) + " ...（內容已截斷）";
 
   loading.classList.remove("hidden");
-  aiOutputDiv.textContent = ""; geoOutputDiv.textContent = "";
+  aiOutputDiv.textContent = ""; 
+  geoOutputDiv.textContent = "";   // ✅ 清空地圖解釋
 
   try {
     const endpoint = `https://generativelanguage.googleapis.com/v1/models/gemini-2.0-flash:generateContent?key=${GEMINI_KEY}`;
@@ -192,15 +193,14 @@ geoButton.onclick = async () => {
   const b=bookSelect.value,ch=chapterSelect.value,v=verseSelect.value;
   if(!b||!ch)return;
   loading.classList.remove("hidden");
+  aiOutputDiv.textContent = "";    // ✅ 清空 AI 解釋
   geoOutputDiv.textContent = "";
 
   try {
     const endpoint = `https://generativelanguage.googleapis.com/v1/models/gemini-2.0-flash:generateContent?key=${GEMINI_KEY}`;
     const target = v ? `第${v}節` : `第${ch}章`;
     const prompt = `請提供《${b} ${target}》的地理背景資訊，包括出現的地名、現今位置、可能的城市，並附上可在 Google Maps 搜尋的關鍵字（請用繁體中文）：`;
-    const payload = {
-      contents: [{ parts: [{ text: prompt }] }]
-    };
+    const payload = { contents: [{ parts: [{ text: prompt }] }] };
     const res = await fetch(endpoint, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -208,11 +208,18 @@ geoButton.onclick = async () => {
     });
     if(!res.ok) throw new Error(`HTTP ${res.status}`);
     const data = await res.json();
+
     let geoText = data.candidates?.[0]?.content?.parts?.map(p => p.text).join("\n") || "⚠️ 無回覆";
-    geoText = geoText.replace(/([^\s]{2,10})（現今.*?）/g, (match, p1) => {
-      const url = `https://www.google.com/maps?q=${encodeURIComponent(p1)}`;
-      return `<a href="${url}" target="_blank">${p1}</a>`;
+
+    // ✅ 強化地名偵測：任何 2-20 字的中文詞都變成 Google Maps 連結（避免重複處理）
+    const seen = new Set();
+    geoText = geoText.replace(/([\u4e00-\u9fa5]{2,20})/g, (match) => {
+      if(seen.has(match)) return match;
+      seen.add(match);
+      const url = `https://www.google.com/maps?q=${encodeURIComponent(match)}`;
+      return `<a href="${url}" target="_blank">${match}</a>`;
     });
+
     geoOutputDiv.innerHTML = "<strong>📍 地理位置：</strong><br>" + geoText.replace(/\n/g,"<br>");
   } catch(e){
     geoOutputDiv.textContent = "❌ 地理資料獲取失敗：" + e.message;
