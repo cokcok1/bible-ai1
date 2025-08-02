@@ -1,209 +1,228 @@
 <!DOCTYPE html>
 <html lang="zh-Hant">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>📖 聖經 + AI 解釋 (DeepSeek)</title>
-  <meta name="theme-color" content="#2563eb"/>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>📖 聖經 + AI 解釋 (Gemini)</title>
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#2563eb">
   <script src="https://cdn.tailwindcss.com"></script>
   <style>
     body { font-family: 'Inter', sans-serif; background:#f8f8f8; margin:0; }
     .no-scrollbar::-webkit-scrollbar { display:none; }
     #explainButton { font-size: 0.9rem; padding: 0.3rem 1rem; }
-    #bibleSection { background: #e6f0ff; height: 50svh; display:flex; flex-direction:column; padding:12px; box-sizing:border-box; }
+
+    /* ✅ 經文上半部（淺藍背景） */
+    #bibleSection { background: #e6f0ff; height: 50svh; display:flex; flex-direction:column; padding: 12px; box-sizing:border-box; }
     #bibleContent { flex:1; overflow-y:auto; background:white; padding:12px; border-radius:8px; box-shadow: inset 0 0 3px rgba(0,0,0,0.1); }
+
+    /* ✅ AI 下半部（外框淺藍） */
     #aiSection { background: #e6f0ff; height: 50svh; display:flex; flex-direction:column; padding:12px; box-sizing:border-box; }
     #aiOutput { flex:1; overflow-y:auto; background:white; padding:12px; border-radius:8px; box-shadow: inset 0 0 3px rgba(0,0,0,0.1); font-size:0.95rem; }
+
     #versionTag { position: fixed; bottom: 2px; right: 6px; font-size: 0.7rem; color: gray; background: rgba(255,255,255,0.5); padding: 2px 4px; border-radius: 3px; }
   </style>
 </head>
 <body class="flex flex-col h-screen">
-  <div class="flex-1 flex flex-col overflow-hidden">
-    <div id="bibleSection" class="shadow-md rounded-b-lg">
-      <h1 class="text-2xl font-bold text-center mb-3 text-blue-700">📖 聖經閱讀器 + DeepSeek AI</h1>
-      <div id="loadError" class="hidden bg-red-100 text-red-700 p-2 mb-2 rounded"></div>
-      <div class="grid grid-cols-3 gap-3 mb-3">
-        <select id="bookSelect" class="p-3 border rounded-lg shadow-sm w-full"><option value="">請選擇書卷</option></select>
-        <select id="chapterSelect" class="p-3 border rounded-lg shadow-sm w-full" disabled><option value="">請選擇章節</option></select>
-        <select id="verseSelect" class="p-3 border rounded-lg shadow-sm w-full" disabled><option value="">全部經文</option></select>
-      </div>
-      <div class="flex justify-between items-center mb-2">
-        <button id="prevChapter" class="bg-gray-300 px-3 py-1 rounded disabled:opacity-40" disabled>上一章</button>
-        <div class="flex gap-2">
-          <button id="nextChapter" class="bg-gray-300 px-3 py-1 rounded disabled:opacity-40" disabled>下一章</button>
-          <button id="explainButton" class="bg-gradient-to-r from-green-500 to-green-700 text-white rounded shadow disabled:opacity-40" disabled>AI解釋這段聖經</button>
-        </div>
-      </div>
-      <div id="bibleContent" class="no-scrollbar text-lg leading-relaxed">
-        📖 請先選擇書卷和章節來閱讀聖經。
+<div class="flex-1 flex flex-col overflow-hidden">
+
+  <!-- 📖 Bible Section -->
+  <div id="bibleSection" class="shadow-md rounded-b-lg">
+    <h1 class="text-2xl font-bold text-center mb-3 text-blue-700">📖 聖經閱讀器 + Gemini AI</h1>
+    <div id="loadError" class="hidden bg-red-100 text-red-700 p-2 mb-2 rounded"></div>
+
+    <!-- ✅ 下拉選單 -->
+    <div class="grid grid-cols-3 gap-3 mb-3">
+      <select id="bookSelect" class="p-3 border rounded-lg shadow-sm w-full">
+        <option value="">請選擇書卷</option>
+      </select>
+      <select id="chapterSelect" class="p-3 border rounded-lg shadow-sm w-full" disabled>
+        <option value="">請選擇章節</option>
+      </select>
+      <select id="verseSelect" class="p-3 border rounded-lg shadow-sm w-full" disabled>
+        <option value="">全部經文</option>
+      </select>
+    </div>
+
+    <!-- ✅ 導航 + AI 按鈕 -->
+    <div class="flex justify-between items-center mb-2">
+      <button id="prevChapter" class="bg-gray-300 px-3 py-1 rounded disabled:opacity-40" disabled>上一章</button>
+      <div class="flex gap-2">
+        <button id="nextChapter" class="bg-gray-300 px-3 py-1 rounded disabled:opacity-40" disabled>下一章</button>
+        <button id="explainButton" class="bg-gradient-to-r from-green-500 to-green-700 text-white rounded shadow disabled:opacity-40" disabled>AI解釋這段聖經</button>
       </div>
     </div>
-    <div id="aiSection" class="rounded-t-lg shadow-md">
-      <div id="aiOutput" class="no-scrollbar"></div>
-      <div id="loadingIndicator" class="hidden text-center mt-1 text-blue-600 text-sm">🤔 AI 正在思考中...</div>
+
+    <div id="bibleContent" class="no-scrollbar text-lg leading-relaxed">
+      📖 請先選擇書卷和章節來閱讀聖經。
     </div>
   </div>
 
-  <div id="versionTag">AI解釋內容只供參考 DeepSeek API 080125 1920</div>
+  <!-- 🤖 AI Section (淺藍背景 + 白色文字框) -->
+  <div id="aiSection" class="rounded-t-lg shadow-md">
+    <div id="aiOutput" class="no-scrollbar"></div>
+    <div id="loadingIndicator" class="hidden text-center mt-1 text-blue-600 text-sm">🤔 AI 正在思考中...</div>
+  </div>
 
-<script>
-window.addEventListener("DOMContentLoaded", () => {
-  const DEEPSEEK_KEY = "sk-bd5c324299fb4043b8a3f08b45527e5e";
+</div>
 
-  const bookSelect = document.getElementById('bookSelect');
-  const chapterSelect = document.getElementById('chapterSelect');
-  const verseSelect = document.getElementById('verseSelect');
-  const bibleContentDiv = document.getElementById('bibleContent');
-  const aiOutputDiv = document.getElementById('aiOutput');
-  const explainButton = document.getElementById('explainButton');
-  const loading = document.getElementById('loadingIndicator');
-  const prevBtn = document.getElementById('prevChapter');
-  const nextBtn = document.getElementById('nextChapter');
-  const loadError = document.getElementById('loadError');
-  let bibleData = {};
+<!-- ✅ 版本號 -->
+<div id="versionTag">AI解釋內容只供參考 010825 2053</div>
 
-  function parseBibleTXT(text) {
-    const lines = text.split('\n');
-    const data = {};
-    lines.forEach(l => {
-      const m = l.match(/^(.+?)(?:\s)?(\d+):(\d+)\s(.+)$/);
-      if (m) {
-        const [_, book, ch, vs, ct] = m;
-        data[book] = data[book] || {};
-        data[book][ch] = data[book][ch] || {};
-        data[book][ch][vs] = `${vs} ${ct}`;
-      }
-    });
-    return data;
-  }
+<script type="module">
+// ✅ API Key
+const GEMINI_KEY = "AIzaSyBURyCnTRY5pO0OZjyMRI37jYEU_tWShhg";
 
-  async function loadBible() {
-    try {
-      const res = await fetch('chinese_union_trad_trad.txt');
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      const raw = await res.text();
-      bibleData = parseBibleTXT(raw);
-      for (const b in bibleData) {
-        let o = document.createElement('option');
-        o.value = b;
-        o.textContent = b;
-        bookSelect.appendChild(o);
-      }
-    } catch (e) {
-      loadError.textContent = "❌ 聖經載入失敗：" + e.message;
-      loadError.classList.remove('hidden');
+const bookSelect=document.getElementById('bookSelect');
+const chapterSelect=document.getElementById('chapterSelect');
+const verseSelect=document.getElementById('verseSelect');
+const bibleContentDiv=document.getElementById('bibleContent');
+const aiOutputDiv=document.getElementById('aiOutput');
+const explainButton=document.getElementById('explainButton');
+const loading=document.getElementById('loadingIndicator');
+const prevBtn=document.getElementById('prevChapter');
+const nextBtn=document.getElementById('nextChapter');
+const loadError=document.getElementById('loadError');
+let bibleData={};
+
+// ✅ 解析 TXT
+function parseBibleTXT(text){
+  const lines=text.split('\n');
+  const data={};
+  lines.forEach(l=>{
+    const m=l.match(/^(.+?)(?:\s)?(\d+):(\d+)\s(.+)$/);
+    if(m){
+      const[_,book,ch,vs,ct]=m;
+      data[book]=data[book]||{};
+      data[book][ch]=data[book][ch]||{};
+      data[book][ch][vs]=`${vs} ${ct}`;
     }
-  }
-  loadBible();
-
-  bookSelect.addEventListener('change', () => {
-    const b = bookSelect.value;
-    chapterSelect.innerHTML = '<option value="">請選擇章節</option>';
-    verseSelect.innerHTML = '<option value="">全部經文</option>';
-    bibleContentDiv.textContent = "📖 請選擇章節";
-    verseSelect.disabled = true;
-    explainButton.disabled = true;
-    if (!b) { chapterSelect.disabled = true; return; }
-    chapterSelect.disabled = false;
-    Object.keys(bibleData[b]).forEach(ch => {
-      let o = document.createElement('option');
-      o.value = ch;
-      o.textContent = `第${ch}章`;
-      chapterSelect.appendChild(o);
-    });
   });
+  return data;
+}
 
-  chapterSelect.addEventListener('change', () => {
-    const b = bookSelect.value;
-    const ch = chapterSelect.value;
-    if (!b || !ch) return;
-    verseSelect.innerHTML = '<option value="">全部經文</option>';
-    Object.keys(bibleData[b][ch]).forEach(v => {
-      let o = document.createElement('option');
-      o.value = v;
-      o.textContent = `第${v}節`;
-      verseSelect.appendChild(o);
-    });
-    verseSelect.disabled = false;
-    showChapter();
-  });
-
-  verseSelect.addEventListener('change', () => showChapter());
-
-  function showChapter() {
-    const b = bookSelect.value;
-    const ch = chapterSelect.value;
-    const v = verseSelect.value;
-    if (!b || !ch) {
-      bibleContentDiv.textContent = "📖 請選擇書卷和章節";
-      return;
-    }
-    if (v) {
-      bibleContentDiv.innerHTML = `<p>${bibleData[b][ch][v]}</p>`;
-    } else {
-      bibleContentDiv.innerHTML = Object.values(bibleData[b][ch]).map(t => `<p>${t}</p>`).join('');
-    }
-    explainButton.disabled = false;
-    prevBtn.disabled = !bibleData[b][parseInt(ch) - 1];
-    nextBtn.disabled = !bibleData[b][parseInt(ch) + 1];
+// ✅ 載入 TXT
+async function loadBible(){
+  try{
+    const res=await fetch('chinese_union_trad_trad.txt');
+    if(!res.ok) throw new Error(`HTTP ${res.status}`);
+    const raw=await res.text();
+    bibleData=parseBibleTXT(raw);
+    for(const b in bibleData){let o=document.createElement('option');o.value=b;o.textContent=b;bookSelect.appendChild(o);}
+  }catch(e){
+    loadError.textContent="❌ 聖經載入失敗："+e.message;
+    loadError.classList.remove('hidden');
   }
+}
+loadBible();
 
-  prevBtn.onclick = () => {
-    chapterSelect.value = parseInt(chapterSelect.value) - 1;
-    verseSelect.value = "";
-    showChapter();
-  };
-
-  nextBtn.onclick = () => {
-    chapterSelect.value = parseInt(chapterSelect.value) + 1;
-    verseSelect.value = "";
-    showChapter();
-  };
-
-  explainButton.onclick = async () => {
-    const b = bookSelect.value;
-    const ch = chapterSelect.value;
-    const v = verseSelect.value;
-    let passage = bibleContentDiv.innerText;
-    if (!b || !ch) return;
-    if (passage.length > 4000) passage = passage.substring(0, 4000) + " ...（內容已截斷）";
-    loading.classList.remove("hidden");
-    aiOutputDiv.textContent = "";
-
-    try {
-      const target = v ? `第${v}節` : `第${ch}章`;
-      const payload = {
-        model: "deepseek-chat",
-        messages: [
-          { role: "system", content: "你是一位非常熟悉聖經、神學與歷史背景的解經專家，請用繁體中文回答。" },
-          {
-            role: "user",
-            content: `請詳細解釋聖經 ${b} ${target}，包含解釋、經文主題、背景資料、交叉引用、出處與反思問題：\n${passage}`
-          }
-        ],
-        stream: false
-      };
-
-      const res = await fetch("https://api.deepseek.com/chat/completions", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${DEEPSEEK_KEY}`
-        },
-        body: JSON.stringify(payload)
-      });
-
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      const data = await res.json();
-
-      aiOutputDiv.innerHTML = data.choices?.[0]?.message?.content?.replace(/\n/g, "<br>")
-        || "⚠️ AI 沒有回覆，請檢查 API Key 或稍後再試。";
-    } catch (e) {
-      aiOutputDiv.textContent = "❌ AI 解釋失敗：" + e.message;
-    }
-    loading.classList.add("hidden");
-  };
+// ✅ 選書卷
+bookSelect.addEventListener('change',()=>{
+  const b=bookSelect.value;
+  chapterSelect.innerHTML='<option value="">請選擇章節</option>';
+  verseSelect.innerHTML='<option value="">全部經文</option>';
+  bibleContentDiv.textContent="📖 請選擇章節";
+  verseSelect.disabled=true;
+  explainButton.disabled=true;
+  if(!b){chapterSelect.disabled=true;return;}
+  chapterSelect.disabled=false;
+  Object.keys(bibleData[b]).forEach(ch=>{
+    let o=document.createElement('option');
+    o.value=ch;o.textContent=`第${ch}章`;
+    chapterSelect.appendChild(o);
+  });
 });
+
+// ✅ 選章節 → 生成節選單 + 顯示整章
+chapterSelect.addEventListener('change',()=>{
+  const b=bookSelect.value;const ch=chapterSelect.value;
+  if(!b||!ch)return;
+  verseSelect.innerHTML='<option value="">全部經文</option>';
+  Object.keys(bibleData[b][ch]).forEach(v=>{
+    let o=document.createElement('option');
+    o.value=v;o.textContent=`第${v}節`;
+    verseSelect.appendChild(o);
+  });
+  verseSelect.disabled=false;
+  showChapter();
+});
+
+// ✅ 選節 → 顯示該節或整章
+verseSelect.addEventListener('change',()=>showChapter());
+
+// ✅ 顯示章節/節
+function showChapter(){
+  const b=bookSelect.value;const ch=chapterSelect.value;const v=verseSelect.value;
+  if(!b||!ch){bibleContentDiv.textContent="📖 請選擇書卷和章節";return;}
+  if(v){
+    bibleContentDiv.innerHTML=`<p>${bibleData[b][ch][v]}</p>`;
+  }else{
+    bibleContentDiv.innerHTML=Object.values(bibleData[b][ch]).map(t=>`<p>${t}</p>`).join('');
+  }
+  explainButton.disabled=false;
+  prevBtn.disabled=!bibleData[b][parseInt(ch)-1];
+  nextBtn.disabled=!bibleData[b][parseInt(ch)+1];
+}
+prevBtn.onclick=()=>{chapterSelect.value=parseInt(chapterSelect.value)-1;verseSelect.value="";showChapter();};
+nextBtn.onclick=()=>{chapterSelect.value=parseInt(chapterSelect.value)+1;verseSelect.value="";showChapter();};
+
+// ✅ Gemini AI
+explainButton.onclick = async () => {
+  const b = bookSelect.value;
+  const ch = chapterSelect.value;
+  const v = verseSelect.value;
+  let passage = bibleContentDiv.innerText;
+  if (!b || !ch) return;
+  if (passage.length > 4000) passage = passage.substring(0, 4000) + " ...（內容已截斷）";
+
+  loading.classList.remove("hidden");
+  aiOutputDiv.textContent = "";
+
+  try {
+    const endpoint = `https://generativelanguage.googleapis.com/v1/models/gemini-2.0-flash:generateContent?key=${GEMINI_KEY}`;
+    const target = v ? `第${v}節` : `第${ch}章`;
+    const payload = {
+      contents: [
+        { parts: [{
+  text: `請用中文（繁體）並以基督教信仰和聖經真理為基礎，解釋聖經 ${b} ${target}。
+
+📌 如果是整章，請提供：
+- 【經文概要】概述此章內容與主要事件。
+- 【神學重點】指出核心神學信息、救恩啟示及屬靈信息。
+- 【歷史文化背景】補充與理解本章相關的背景資料。
+- 【引用】列出其他聖經相關經文，並說明其關聯。
+- 【屬靈應用】提供如何將此章的信息應用於信徒生活。
+- 【默想與反思問題】提出2-3個引導思考與靈修的問題。
+
+📌 如果是特定節，請提供：
+- 【經文解釋】詳細闡述該節的含義。
+- 【神學與啟示】說明屬靈及神學重點。
+- 【背景與引用】補充歷史背景及相關經文支持。
+- 【應用與反思】給出屬靈應用與默想方向。
+
+⚠️ 回覆必須根據聖經權威和基督教信仰原則撰寫。  
+經文內容如下：\n${passage}`
+}]
+ }
+      ]
+    };
+
+    const res = await fetch(endpoint, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload)
+    });
+
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const data = await res.json();
+
+    aiOutputDiv.innerHTML = data.candidates?.[0]?.content?.parts?.map(p => p.text).join("\n").replace(/\n/g,"<br>") 
+      || "⚠️ AI 沒有回覆，請檢查 API Key 或稍後再試。";
+  } catch (e) {
+    aiOutputDiv.textContent = "❌ AI 解釋失敗：" + e.message;
+  }
+  loading.classList.add("hidden");
+};
 </script>
 <script>if('serviceWorker' in navigator){navigator.serviceWorker.register('sw.js');}</script>
 </body>
