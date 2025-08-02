@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>📖 聖經 + AI 解釋 (Gemini)</title>
+  <title>📖 聖經 + AI 解釋 (DeepSeek)</title>
   <link rel="manifest" href="manifest.json">
   <meta name="theme-color" content="#2563eb">
   <script src="https://cdn.tailwindcss.com"></script>
@@ -12,11 +12,9 @@
     .no-scrollbar::-webkit-scrollbar { display:none; }
     #explainButton { font-size: 0.9rem; padding: 0.3rem 1rem; }
 
-    /* ✅ 經文上半部（淺藍背景） */
     #bibleSection { background: #e6f0ff; height: 50svh; display:flex; flex-direction:column; padding: 12px; box-sizing:border-box; }
     #bibleContent { flex:1; overflow-y:auto; background:white; padding:12px; border-radius:8px; box-shadow: inset 0 0 3px rgba(0,0,0,0.1); }
 
-    /* ✅ AI 下半部（外框淺藍） */
     #aiSection { background: #e6f0ff; height: 50svh; display:flex; flex-direction:column; padding:12px; box-sizing:border-box; }
     #aiOutput { flex:1; overflow-y:auto; background:white; padding:12px; border-radius:8px; box-shadow: inset 0 0 3px rgba(0,0,0,0.1); font-size:0.95rem; }
 
@@ -26,12 +24,10 @@
 <body class="flex flex-col h-screen">
 <div class="flex-1 flex flex-col overflow-hidden">
 
-  <!-- 📖 Bible Section -->
   <div id="bibleSection" class="shadow-md rounded-b-lg">
-    <h1 class="text-2xl font-bold text-center mb-3 text-blue-700">📖 聖經閱讀器 + Gemini AI</h1>
+    <h1 class="text-2xl font-bold text-center mb-3 text-blue-700">📖 聖經閱讀器 + DeepSeek AI</h1>
     <div id="loadError" class="hidden bg-red-100 text-red-700 p-2 mb-2 rounded"></div>
 
-    <!-- ✅ 下拉選單 -->
     <div class="grid grid-cols-3 gap-3 mb-3">
       <select id="bookSelect" class="p-3 border rounded-lg shadow-sm w-full">
         <option value="">請選擇書卷</option>
@@ -44,7 +40,6 @@
       </select>
     </div>
 
-    <!-- ✅ 導航 + AI 按鈕 -->
     <div class="flex justify-between items-center mb-2">
       <button id="prevChapter" class="bg-gray-300 px-3 py-1 rounded disabled:opacity-40" disabled>上一章</button>
       <div class="flex gap-2">
@@ -58,7 +53,6 @@
     </div>
   </div>
 
-  <!-- 🤖 AI Section (淺藍背景 + 白色文字框) -->
   <div id="aiSection" class="rounded-t-lg shadow-md">
     <div id="aiOutput" class="no-scrollbar"></div>
     <div id="loadingIndicator" class="hidden text-center mt-1 text-blue-600 text-sm">🤔 AI 正在思考中...</div>
@@ -66,12 +60,10 @@
 
 </div>
 
-<!-- ✅ 版本號 -->
-<div id="versionTag">AI解釋內容只供參考 300725 1356</div>
+<div id="versionTag">AI解釋內容只供參考 DeepSeek API</div>
 
 <script type="module">
-// ✅ API Key
-const GEMINI_KEY = "AIzaSyBURyCnTRY5pO0OZjyMRI37jYEU_tWShhg";
+const DEEPSEEK_KEY = sk-bd5c324299fb4043b8a3f08b45527e5e;  // ← 貼上你的 DeepSeek API 金鑰
 
 const bookSelect=document.getElementById('bookSelect');
 const chapterSelect=document.getElementById('chapterSelect');
@@ -85,7 +77,6 @@ const nextBtn=document.getElementById('nextChapter');
 const loadError=document.getElementById('loadError');
 let bibleData={};
 
-// ✅ 解析 TXT
 function parseBibleTXT(text){
   const lines=text.split('\n');
   const data={};
@@ -101,7 +92,6 @@ function parseBibleTXT(text){
   return data;
 }
 
-// ✅ 載入 TXT
 async function loadBible(){
   try{
     const res=await fetch('chinese_union_trad_trad.txt');
@@ -116,7 +106,6 @@ async function loadBible(){
 }
 loadBible();
 
-// ✅ 選書卷
 bookSelect.addEventListener('change',()=>{
   const b=bookSelect.value;
   chapterSelect.innerHTML='<option value="">請選擇章節</option>';
@@ -133,9 +122,7 @@ bookSelect.addEventListener('change',()=>{
   });
 });
 
-// ✅ 選章節 → 生成節選單 + 顯示整章
-chapterSelect.addEventListener('change',()=>{
-  const b=bookSelect.value;const ch=chapterSelect.value;
+chapterSelect.addEventListener('change',()=>{const b=bookSelect.value;const ch=chapterSelect.value;
   if(!b||!ch)return;
   verseSelect.innerHTML='<option value="">全部經文</option>';
   Object.keys(bibleData[b][ch]).forEach(v=>{
@@ -147,10 +134,8 @@ chapterSelect.addEventListener('change',()=>{
   showChapter();
 });
 
-// ✅ 選節 → 顯示該節或整章
 verseSelect.addEventListener('change',()=>showChapter());
 
-// ✅ 顯示章節/節
 function showChapter(){
   const b=bookSelect.value;const ch=chapterSelect.value;const v=verseSelect.value;
   if(!b||!ch){bibleContentDiv.textContent="📖 請選擇書卷和章節";return;}
@@ -166,7 +151,7 @@ function showChapter(){
 prevBtn.onclick=()=>{chapterSelect.value=parseInt(chapterSelect.value)-1;verseSelect.value="";showChapter();};
 nextBtn.onclick=()=>{chapterSelect.value=parseInt(chapterSelect.value)+1;verseSelect.value="";showChapter();};
 
-// ✅ Gemini AI
+// ✅ 使用 DeepSeek API 解釋經文
 explainButton.onclick = async () => {
   const b = bookSelect.value;
   const ch = chapterSelect.value;
@@ -179,25 +164,32 @@ explainButton.onclick = async () => {
   aiOutputDiv.textContent = "";
 
   try {
-    const endpoint = `https://generativelanguage.googleapis.com/v1/models/gemini-2.0-flash:generateContent?key=${GEMINI_KEY}`;
     const target = v ? `第${v}節` : `第${ch}章`;
     const payload = {
-      contents: [
-        { parts: [{ text: `請用中文（繁體）詳細解釋聖經 ${b} ${target}，包含解釋、經文主題、背景資料、交叉引用、出處與反思問題：\n${passage}` }] }
-      ]
+      model: "deepseek-chat",
+      messages: [
+        { role: "system", content: "你是一位非常熟悉聖經、神學與歷史背景的解經專家，請用繁體中文回答。" },
+        {
+          role: "user",
+          content: `請詳細解釋聖經 ${b} ${target}，包含解釋、經文主題、背景資料、交叉引用、出處與反思問題：\n${passage}`
+        }
+      ],
+      stream: false
     };
 
-    const res = await fetch(endpoint, {
+    const res = await fetch("https://api.deepseek.com/chat/completions", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${DEEPSEEK_KEY}`
+      },
       body: JSON.stringify(payload)
     });
 
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     const data = await res.json();
 
-    aiOutputDiv.innerHTML = data.candidates?.[0]?.content?.parts?.map(p => p.text).join("\n").replace(/\n/g,"<br>") 
-      || "⚠️ AI 沒有回覆，請檢查 API Key 或稍後再試。";
+    aiOutputDiv.innerHTML = data.choices?.[0]?.message?.content?.replace(/\n/g, "<br>") || "⚠️ AI 沒有回覆，請檢查 API Key 或稍後再試。";
   } catch (e) {
     aiOutputDiv.textContent = "❌ AI 解釋失敗：" + e.message;
   }
