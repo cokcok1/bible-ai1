@@ -32,7 +32,7 @@
       <button id="prevChapter" class="bg-gray-300 px-3 py-1 rounded disabled:opacity-40" disabled>上一章</button>
       <div class="flex gap-2">
         <button id="nextChapter" class="bg-gray-300 px-3 py-1 rounded disabled:opacity-40" disabled>下一章</button>
-        <button id="explainButton" class="bg-gradient-to-r from-green-500 to-green-700 text-white rounded shadow disabled:opacity-40" disabled>AI解釋這段聖經</button>
+        <button id="explainButton" class="bg-gradient-to-r from-green-500 to-green-700 text-white rounded shadow disabled:opacity-40" disabled>AI解釋</button>
         <button id="geoButton" class="bg-gradient-to-r from-blue-400 to-blue-700 text-white rounded shadow disabled:opacity-40" disabled>📍地理位置</button>
       </div>
     </div>
@@ -47,7 +47,7 @@
   </div>
 </div>
 
-<div id="versionTag">AI解釋內容只供參考 080325 1637</div>
+<div id="versionTag">Powered by Google Gemini AI解釋內容只供參考 060825 1106</div>
 
 <script type="module">
 const GEMINI_KEY = "AIzaSyBURyCnTRY5pO0OZjyMRI37jYEU_tWShhg";
@@ -165,11 +165,14 @@ explainButton.onclick=async()=>{
   const prompt=v?
 `請用中文（繁體）並以基督教信仰和聖經真理為基礎，解釋聖經 ${b} ${target}。
 
-📌 如果是特定節，請提供：
+📌 如果是整章，請提供：
+- 【經文概要】概述此章內容與主要事件。
 - 【經文解釋】詳細闡述該節的含義。
-- 【神學與啟示】說明屬靈及神學重點。
-- 【背景與引用】補充歷史背景及相關經文支持。
-- 【應用與反思】給出屬靈應用與默想方向。
+- 【神學重點】指出核心神學信息、救恩啟示及屬靈信息。
+- 【歷史文化背景】補充與理解本章相關的背景資料。
+- 【引用】列出其他聖經相關經文，並說明其關聯。
+- 【屬靈應用】提供如何將此章的信息應用於信徒生活。
+- 【默想與反思問題】提出2-3個引導思考與靈修的問題。
 
 ⚠️ 回覆必須根據聖經權威和基督教信仰原則撰寫。
 經文內容如下：
