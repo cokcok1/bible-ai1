@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>📖 聖經閱讀器 </title>
+  <title>📖 聖經 + AI 解釋 + 地圖</title>
   <link rel="manifest" href="manifest.json">
   <meta name="theme-color" content="#2563eb">
   <script src="https://cdn.tailwindcss.com"></script>
@@ -21,7 +21,7 @@
 <body class="flex flex-col h-screen">
 <div class="flex-1 flex flex-col overflow-hidden">
   <div id="bibleSection" class="shadow-md rounded-b-lg">
-    <h1 class="text-2xl font-bold text-center mb-3 text-blue-700">📖 聖經閱讀器 </h1>
+    <h1 class="text-2xl font-bold text-center mb-3 text-blue-700">📖 聖經閱讀器</h1>
     <div id="loadError" class="hidden bg-red-100 text-red-700 p-2 mb-2 rounded"></div>
     <div class="grid grid-cols-3 gap-3 mb-3">
       <select id="bookSelect" class="p-3 border rounded-lg shadow-sm w-full"><option value="">請選擇書卷</option></select>
@@ -32,7 +32,7 @@
       <button id="prevChapter" class="bg-gray-300 px-3 py-1 rounded disabled:opacity-40" disabled>上一章</button>
       <div class="flex gap-2">
         <button id="nextChapter" class="bg-gray-300 px-3 py-1 rounded disabled:opacity-40" disabled>下一章</button>
-        <button id="explainButton" class="bg-gradient-to-r from-green-500 to-green-700 text-white rounded shadow disabled:opacity-40" disabled>AI解釋</button>
+        <button id="explainButton" class="bg-gradient-to-r from-green-500 to-green-700 text-white rounded shadow disabled:opacity-40" disabled>AI解釋這段聖經</button>
         <button id="geoButton" class="bg-gradient-to-r from-blue-400 to-blue-700 text-white rounded shadow disabled:opacity-40" disabled>📍地理位置</button>
       </div>
     </div>
@@ -47,10 +47,10 @@
   </div>
 </div>
 
-<div id="versionTag">Powered by Google Gemini AI解釋內容只供參考 080825 1405</div>
+<div id="versionTag">Power by Google AI解釋內容只供參考 080825 1414</div>
 
 <script type="module">
-const GEMINI_KEY = "AIzaSyBURyCnTRY5pO0OZjyMRI37jYEU_tWShhg";
+const GEMINI_KEY = "YOUR_GEMINI_API_KEY_HERE";
 
 const bookSelect=document.getElementById('bookSelect');
 const chapterSelect=document.getElementById('chapterSelect');
@@ -165,14 +165,11 @@ explainButton.onclick=async()=>{
   const prompt=v?
 `請用中文（繁體）並以基督教信仰和聖經真理為基礎，解釋聖經 ${b} ${target}。
 
-📌 如果是整章，請提供：
-- 【經文概要】概述此章內容與主要事件。
+📌 如果是特定節，請提供：
 - 【經文解釋】詳細闡述該節的含義。
-- 【神學重點】指出核心神學信息、救恩啟示及屬靈信息。
-- 【歷史文化背景】補充與理解本章相關的背景資料。
-- 【引用】列出其他聖經相關經文，並說明其關聯。
-- 【屬靈應用】提供如何將此章的信息應用於信徒生活。
-- 【默想與反思問題】提出2-3個引導思考與靈修的問題。
+- 【神學與啟示】說明屬靈及神學重點。
+- 【背景與引用】補充歷史背景及相關經文支持。
+- 【應用與反思】給出屬靈應用與默想方向。
 
 ⚠️ 回覆必須根據聖經權威和基督教信仰原則撰寫。
 經文內容如下：
