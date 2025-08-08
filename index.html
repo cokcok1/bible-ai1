@@ -47,7 +47,7 @@
   </div>
 </div>
 
-<div id="versionTag">Powered by Google Gemini AI解釋內容只供參考 080825 1358</div>
+<div id="versionTag">Powered by Google Gemini AI解釋內容只供參考 080825 1405</div>
 
 <script type="module">
 const GEMINI_KEY = "AIzaSyBURyCnTRY5pO0OZjyMRI37jYEU_tWShhg";
@@ -151,25 +151,19 @@ function showChapter(){
 prevBtn.onclick=()=>{chapterSelect.value=parseInt(chapterSelect.value)-1;verseSelect.value="";showChapter();};
 nextBtn.onclick=()=>{chapterSelect.value=parseInt(chapterSelect.value)+1;verseSelect.value="";showChapter();};
 
-// ✅ Gemini AI
-explainButton.onclick = async () => {
-  const b = bookSelect.value;
-  const ch = chapterSelect.value;
-  const v = verseSelect.value;
-  let passage = bibleContentDiv.innerText;
-  if (!b || !ch) return;
-  if (passage.length > 4000) passage = passage.substring(0, 4000) + " ...（內容已截斷）";
+// ✅ AI 解釋（使用你的新提示）
+explainButton.onclick=async()=>{
+  const b=bookSelect.value,ch=chapterSelect.value,v=verseSelect.value;
+  let passage=bibleContentDiv.innerText;
+  if(!b||!ch)return;
+  if(passage.length>4000) passage=passage.substring(0,4000)+" ...（內容已截斷）";
 
   loading.classList.remove("hidden");
-  aiOutputDiv.textContent = "";
+  outputDiv.innerHTML="🤔 AI 正在思考中...";
 
-  try {
-    const endpoint = `https://generativelanguage.googleapis.com/v1/models/gemini-2.0-flash:generateContent?key=${GEMINI_KEY}`;
-    const target = v ? `第${v}節` : `第${ch}章`;
-    const payload = {
-      contents: [
-        { parts: [{
-  text: `請用中文（繁體）並以基督教信仰和聖經真理為基礎，解釋聖經 ${b} ${target}。
+  const target=v?`第${v}節`:`第${ch}章`;
+  const prompt=v?
+`請用中文（繁體）並以基督教信仰和聖經真理為基礎，解釋聖經 ${b} ${target}。
 
 📌 如果是整章，請提供：
 - 【經文概要】概述此章內容與主要事件。
@@ -180,32 +174,34 @@ explainButton.onclick = async () => {
 - 【屬靈應用】提供如何將此章的信息應用於信徒生活。
 - 【默想與反思問題】提出2-3個引導思考與靈修的問題。
 
-📌 如果是特定節，請提供：
+⚠️ 回覆必須根據聖經權威和基督教信仰原則撰寫。
+經文內容如下：
+${passage}`
+:
+`請用中文（繁體）並以基督教信仰和聖經真理為基礎，解釋聖經 ${b} ${target}。
+
+📌 如果是整章，請提供：
+- 【經文概要】概述此章內容與主要事件。
 - 【經文解釋】詳細闡述該節的含義。
-- 【神學與啟示】說明屬靈及神學重點。
-- 【背景與引用】補充歷史背景及相關經文支持。
-- 【應用與反思】給出屬靈應用與默想方向。
+- 【神學重點】指出核心神學信息、救恩啟示及屬靈信息。
+- 【歷史文化背景】補充與理解本章相關的背景資料。
+- 【引用】列出其他聖經相關經文，並說明其關聯。
+- 【屬靈應用】提供如何將此章的信息應用於信徒生活。
+- 【默想與反思問題】提出2-3個引導思考與靈修的問題。
 
-⚠️ 回覆必須根據聖經權威和基督教信仰原則撰寫。  
-經文內容如下：\n${passage}`
-}]
- }
-      ]
-    };
+⚠️ 回覆必須根據聖經權威和基督教信仰原則撰寫。
+經文內容如下：
+${passage}`;
 
-    const res = await fetch(endpoint, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload)
-    });
-
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    const data = await res.json();
-
-    aiOutputDiv.innerHTML = data.candidates?.[0]?.content?.parts?.map(p => p.text).join("\n").replace(/\n/g,"<br>") 
-      || "⚠️ AI 沒有回覆，請檢查 API Key 或稍後再試。";
-  } catch (e) {
-    aiOutputDiv.textContent = "❌ AI 解釋失敗：" + e.message;
+  try{
+    const endpoint=`https://generativelanguage.googleapis.com/v1/models/gemini-2.0-flash:generateContent?key=${GEMINI_KEY}`;
+    const payload={contents:[{parts:[{text:prompt}]}]};
+    const res=await fetch(endpoint,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(payload)});
+    if(!res.ok) throw new Error(`HTTP ${res.status}`);
+    const data=await res.json();
+    outputDiv.innerHTML=data.candidates?.[0]?.content?.parts?.map(p=>p.text).join("\n").replace(/\n/g,"<br>")||"⚠️ AI 沒有回覆";
+  }catch(e){
+    outputDiv.textContent="❌ AI 解釋失敗："+e.message;
   }
   loading.classList.add("hidden");
 };
