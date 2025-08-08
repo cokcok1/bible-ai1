@@ -47,7 +47,7 @@
   </div>
 </div>
 
-<div id="versionTag">Powered by Google Gemini AI解釋內容只供參考 080825 1347</div>
+<div id="versionTag">Powered by Google Gemini AI解釋內容只供參考 080825 1358</div>
 
 <script type="module">
 const GEMINI_KEY = "AIzaSyBURyCnTRY5pO0OZjyMRI37jYEU_tWShhg";
@@ -151,19 +151,25 @@ function showChapter(){
 prevBtn.onclick=()=>{chapterSelect.value=parseInt(chapterSelect.value)-1;verseSelect.value="";showChapter();};
 nextBtn.onclick=()=>{chapterSelect.value=parseInt(chapterSelect.value)+1;verseSelect.value="";showChapter();};
 
-// ✅ AI 解釋（使用你的新提示）
-explainButton.onclick=async()=>{
-  const b=bookSelect.value,ch=chapterSelect.value,v=verseSelect.value;
-  let passage=bibleContentDiv.innerText;
-  if(!b||!ch)return;
-  if(passage.length>4000) passage=passage.substring(0,4000)+" ...（內容已截斷）";
+// ✅ Gemini AI
+explainButton.onclick = async () => {
+  const b = bookSelect.value;
+  const ch = chapterSelect.value;
+  const v = verseSelect.value;
+  let passage = bibleContentDiv.innerText;
+  if (!b || !ch) return;
+  if (passage.length > 4000) passage = passage.substring(0, 4000) + " ...（內容已截斷）";
 
   loading.classList.remove("hidden");
-  outputDiv.innerHTML="🤔 AI 正在思考中...";
+  aiOutputDiv.textContent = "";
 
-  const target=v?`第${v}節`:`第${ch}章`;
-  const prompt=v?
-`請用中文（繁體）並以基督教信仰和聖經真理為基礎，解釋聖經 ${b} ${target}。
+  try {
+    const endpoint = `https://generativelanguage.googleapis.com/v1/models/gemini-2.0-flash:generateContent?key=${GEMINI_KEY}`;
+    const target = v ? `第${v}節` : `第${ch}章`;
+    const payload = {
+      contents: [
+        { parts: [{
+  text: `請用中文（繁體）並以基督教信仰和聖經真理為基礎，解釋聖經 ${b} ${target}。
 
 📌 如果是整章，請提供：
 - 【經文概要】概述此章內容與主要事件。
@@ -187,15 +193,19 @@ explainButton.onclick=async()=>{
       ]
     };
 
-  try{
-    const endpoint=`https://generativelanguage.googleapis.com/v1/models/gemini-2.0-flash:generateContent?key=${GEMINI_KEY}`;
-    const payload={contents:[{parts:[{text:prompt}]}]};
-    const res=await fetch(endpoint,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(payload)});
-    if(!res.ok) throw new Error(`HTTP ${res.status}`);
-    const data=await res.json();
-    outputDiv.innerHTML=data.candidates?.[0]?.content?.parts?.map(p=>p.text).join("\n").replace(/\n/g,"<br>")||"⚠️ AI 沒有回覆";
-  }catch(e){
-    outputDiv.textContent="❌ AI 解釋失敗："+e.message;
+    const res = await fetch(endpoint, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload)
+    });
+
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const data = await res.json();
+
+    aiOutputDiv.innerHTML = data.candidates?.[0]?.content?.parts?.map(p => p.text).join("\n").replace(/\n/g,"<br>") 
+      || "⚠️ AI 沒有回覆，請檢查 API Key 或稍後再試。";
+  } catch (e) {
+    aiOutputDiv.textContent = "❌ AI 解釋失敗：" + e.message;
   }
   loading.classList.add("hidden");
 };
